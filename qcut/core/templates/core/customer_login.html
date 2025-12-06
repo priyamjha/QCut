@@ -1,0 +1,752 @@
+{% extends "core/base.html" %}
+{% block title %}Customer Login{% endblock %}
+{% block content %}
+<style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 50%, #14b8a6 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    /* Animated Background */
+    .bg-animation {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+    
+    .bubble {
+      position: absolute;
+      bottom: -100px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      animation: rise 15s infinite ease-in;
+    }
+    
+    .bubble:nth-child(1) {
+      width: 80px;
+      height: 80px;
+      left: 10%;
+      animation-delay: 0s;
+    }
+    
+    .bubble:nth-child(2) {
+      width: 120px;
+      height: 120px;
+      left: 30%;
+      animation-delay: 2s;
+    }
+    
+    .bubble:nth-child(3) {
+      width: 60px;
+      height: 60px;
+      left: 50%;
+      animation-delay: 4s;
+    }
+    
+    .bubble:nth-child(4) {
+      width: 100px;
+      height: 100px;
+      left: 70%;
+      animation-delay: 1s;
+    }
+    
+    .bubble:nth-child(5) {
+      width: 90px;
+      height: 90px;
+      left: 85%;
+      animation-delay: 3s;
+    }
+    
+    @keyframes rise {
+      0% {
+        bottom: -100px;
+        transform: translateX(0) rotate(0deg);
+        opacity: 0;
+      }
+      10% {
+        opacity: 0.3;
+      }
+      50% {
+        transform: translateX(50px) rotate(180deg);
+        opacity: 0.2;
+      }
+      100% {
+        bottom: 110%;
+        transform: translateX(-50px) rotate(360deg);
+        opacity: 0;
+      }
+    }
+    
+    .login-container {
+      background: white;
+      border-radius: 28px;
+      box-shadow: 0 25px 70px rgba(0, 0, 0, 0.25);
+      padding: 48px;
+      max-width: 460px;
+      width: 100%;
+      animation: slideUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      position: relative;
+      z-index: 1;
+      overflow: hidden;
+    }
+    
+    .login-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 6px;
+      background: linear-gradient(90deg, #0ea5e9, #06b6d4, #14b8a6, #0ea5e9);
+      background-size: 200% 100%;
+      animation: gradientShift 4s ease infinite;
+    }
+    
+    .header-section {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    
+    .icon-wrapper {
+      display: inline-block;
+      background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+      padding: 24px;
+      border-radius: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 10px 30px rgba(14, 165, 233, 0.3);
+      animation: float 3s ease-in-out infinite;
+      position: relative;
+    }
+    
+    .icon-wrapper::before {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, #0ea5e9, #06b6d4, #14b8a6);
+      z-index: -1;
+      animation: rotate 3s linear infinite;
+      opacity: 0.5;
+    }
+    
+    .icon-wrapper svg {
+      width: 48px;
+      height: 48px;
+      stroke: white;
+      stroke-width: 2;
+      fill: none;
+      filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2));
+    }
+    
+    h1 {
+      font-size: 28px;
+      color: #0f172a;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+    
+    .subtitle {
+      color: #64748b;
+      font-size: 15px;
+    }
+    
+    .form-group {
+      margin-bottom: 28px;
+      position: relative;
+    }
+    
+    label {
+      display: block;
+      color: #475569;
+      font-weight: 600;
+      margin-bottom: 10px;
+      font-size: 14px;
+      transition: color 0.3s ease;
+    }
+    
+    .input-wrapper {
+      position: relative;
+    }
+    
+    .phone-prefix {
+      position: absolute;
+      left: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #0ea5e9;
+      font-weight: 600;
+      font-size: 15px;
+      pointer-events: none;
+      transition: all 0.3s ease;
+    }
+    
+    input[type="tel"] {
+      width: 100%;
+      padding: 16px 20px 16px 60px;
+      border: 2px solid #e2e8f0;
+      border-radius: 14px;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      background: #f8fafc;
+      outline: none;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 1px;
+    }
+    
+    input[type="tel"]:focus {
+      border-color: #0ea5e9;
+      background: white;
+      box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1);
+      transform: translateY(-2px);
+    }
+    
+    input[type="tel"]:focus ~ .phone-prefix {
+      transform: translateY(-50%) scale(1.1);
+      color: #0284c7;
+    }
+    
+    input[type="tel"].success {
+      border-color: #10b981;
+      background: #f0fdf4;
+    }
+    
+    input[type="tel"].error {
+      border-color: #ef4444;
+      background: #fef2f2;
+      animation: shake 0.4s ease;
+    }
+    
+    .input-icon {
+      position: absolute;
+      right: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      transition: all 0.3s ease;
+    }
+    
+    .input-icon svg {
+      width: 22px;
+      height: 22px;
+      stroke: #94a3b8;
+      stroke-width: 2;
+    }
+    
+    input[type="tel"]:focus ~ .input-icon svg {
+      stroke: #0ea5e9;
+      animation: pulse 1.5s ease infinite;
+    }
+    
+    input[type="tel"].success ~ .input-icon svg {
+      stroke: #10b981;
+    }
+    
+    input[type="tel"].error ~ .input-icon svg {
+      stroke: #ef4444;
+    }
+    
+    .error-message {
+      color: #ef4444;
+      font-size: 13px;
+      margin-top: 8px;
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    
+    .error-message.show {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .error-message svg {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+    }
+    
+    .helper-text {
+      color: #64748b;
+      font-size: 13px;
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .helper-text svg {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+    }
+    
+    .btn {
+      width: 100%;
+      padding: 18px;
+      background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+      color: white;
+      border: none;
+      border-radius: 14px;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 6px 20px rgba(14, 165, 233, 0.4);
+      position: relative;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+    
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #06b6d4 0%, #14b8a6 100%);
+      transition: left 0.3s ease;
+    }
+    
+    .btn span {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    
+    .btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(14, 165, 233, 0.5);
+    }
+    
+    .btn:hover::before {
+      left: 0;
+    }
+    
+    .btn:active {
+      transform: translateY(-1px);
+    }
+    
+    .btn.loading {
+      pointer-events: none;
+      opacity: 0.9;
+    }
+    
+    .btn.loading::after {
+      content: '';
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      border: 3px solid white;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      right: 24px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    
+    .footer-text {
+      text-align: center;
+      margin-top: 28px;
+      color: #64748b;
+      font-size: 14px;
+    }
+    
+    .footer-text a {
+      color: #0ea5e9;
+      text-decoration: none;
+      font-weight: 600;
+      position: relative;
+      transition: color 0.3s ease;
+    }
+    
+    .footer-text a::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: #0ea5e9;
+      transition: width 0.3s ease;
+    }
+    
+    .footer-text a:hover {
+      color: #0284c7;
+    }
+    
+    .footer-text a:hover::after {
+      width: 100%;
+    }
+    
+    /* Phone number formatting */
+    .format-preview {
+      position: absolute;
+      top: -32px;
+      right: 0;
+      background: linear-gradient(135deg, #0ea5e9, #06b6d4);
+      color: white;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      opacity: 0;
+      transform: translateY(5px);
+      transition: all 0.3s ease;
+      pointer-events: none;
+      box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+    }
+    
+    .format-preview.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    
+    .format-preview::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      right: 20px;
+      width: 8px;
+      height: 8px;
+      background: inherit;
+      transform: rotate(45deg);
+    }
+    
+    /* Animations */
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(40px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(5px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes float {
+      0%, 100% {
+        transform: translateY(0px);
+      }
+      50% {
+        transform: translateY(-15px);
+      }
+    }
+    
+    @keyframes spin {
+      to {
+        transform: translateY(-50%) rotate(360deg);
+      }
+    }
+    
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-12px); }
+      75% { transform: translateX(12px); }
+    }
+    
+    @keyframes pulse {
+      0%, 100% {
+        transform: translateY(-50%) scale(1);
+        opacity: 1;
+      }
+      50% {
+        transform: translateY(-50%) scale(1.1);
+        opacity: 0.8;
+      }
+    }
+    
+    @keyframes gradientShift {
+      0%, 100% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+    }
+    
+    @keyframes rotate {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+    
+    /* Responsive */
+    @media (max-width: 480px) {
+      .login-container {
+        padding: 36px 24px;
+      }
+      
+      h1 {
+        font-size: 24px;
+      }
+      
+      .icon-wrapper {
+        padding: 20px;
+      }
+      
+      .icon-wrapper svg {
+        width: 40px;
+        height: 40px;
+      }
+    }
+  </style>
+
+  <div class="bg-animation">
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+  </div>
+
+  <div class="login-container">
+    <div class="header-section">
+      <div class="icon-wrapper">
+        <svg viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+        </svg>
+      </div>
+      <h1>Customer - Sign in</h1>
+      <p class="subtitle">Enter your phone number to continue</p>
+    </div>
+
+    <form method="post" action="{% url 'core:customer_login' %}" id="loginForm">
+      {% csrf_token %}
+      
+      <div class="form-group">
+        <label for="phone_number">Phone number</label>
+        <div class="input-wrapper">
+          <div class="format-preview" id="formatPreview">+91 XXXXX XXXXX</div>
+          <span class="phone-prefix">+91</span>
+          <input 
+            id="phone_number" 
+            name="phone_number" 
+            type="tel" 
+            required 
+            placeholder="XXXXX XXXXX"
+            maxlength="10"
+            autocomplete="tel"
+          >
+          <div class="input-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="error-message" id="phoneError">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <span>Please enter a valid 10-digit phone number</span>
+        </div>
+        <div class="helper-text">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <circle cx="12" cy="12" r="10" stroke-width="2"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 16v-4m0-4h.01"/>
+          </svg>
+          <span>Enter 10 digits without +91</span>
+        </div>
+      </div>
+
+      <button class="btn" type="submit" id="submitBtn">
+        <span>
+          Continue
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+          </svg>
+        </span>
+      </button>
+    </form>
+
+    <p class="footer-text">
+      New here? <a href="{% url 'core:customer_signup' %}">Create account</a>
+    </p>
+  </div>
+
+  <script>
+    const phoneInput = document.getElementById('phone_number');
+    const phoneError = document.getElementById('phoneError');
+    const submitBtn = document.getElementById('submitBtn');
+    const form = document.getElementById('loginForm');
+    const formatPreview = document.getElementById('formatPreview');
+
+    // Only allow digits
+    phoneInput.addEventListener('input', function(e) {
+      this.value = this.value.replace(/\D/g, '');
+      
+      // Show format preview
+      if (this.value.length > 0) {
+        formatPreview.classList.add('show');
+        updateFormatPreview(this.value);
+      } else {
+        formatPreview.classList.remove('show');
+      }
+      
+      // Real-time validation
+      validatePhone(false);
+    });
+
+    // Update format preview
+    function updateFormatPreview(value) {
+      const part1 = value.slice(0, 5).padEnd(5, 'X');
+      const part2 = value.slice(5, 10).padEnd(5, 'X');
+      formatPreview.textContent = `+91 ${part1} ${part2}`;
+    }
+
+    // Hide preview on blur if empty
+    phoneInput.addEventListener('blur', function() {
+      setTimeout(() => {
+        if (!this.value) {
+          formatPreview.classList.remove('show');
+        }
+      }, 200);
+    });
+
+    // Validate phone number
+    function validatePhone(showError = true) {
+      const value = phoneInput.value.trim();
+      const isValid = /^[6-9]\d{9}$/.test(value);
+      
+      if (!value) {
+        phoneInput.classList.remove('success', 'error');
+        if (showError) phoneError.classList.remove('show');
+        return false;
+      }
+      
+      if (isValid) {
+        phoneInput.classList.remove('error');
+        phoneInput.classList.add('success');
+        phoneError.classList.remove('show');
+        return true;
+      } else {
+        phoneInput.classList.remove('success');
+        if (showError) {
+          phoneInput.classList.add('error');
+          phoneError.classList.add('show');
+        }
+        return false;
+      }
+    }
+
+    // Form submission
+    form.addEventListener('submit', function(e) {
+      const isValid = validatePhone(true);
+      
+      if (!isValid) {
+        e.preventDefault();
+        return;
+      }
+      
+      // Add +91 prefix to the value
+      const cleanNumber = phoneInput.value.trim();
+      phoneInput.value = '+91' + cleanNumber;
+      
+      // Add loading state
+      submitBtn.classList.add('loading');
+      submitBtn.querySelector('span').innerHTML = 'Verifying...';
+    });
+
+    // Focus animations
+    phoneInput.addEventListener('focus', function() {
+      this.parentElement.parentElement.querySelector('label').style.color = '#0ea5e9';
+    });
+    
+    phoneInput.addEventListener('blur', function() {
+      this.parentElement.parentElement.querySelector('label').style.color = '#475569';
+    });
+
+    // Paste handling - clean pasted content
+    phoneInput.addEventListener('paste', function(e) {
+      e.preventDefault();
+      const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+      const cleanedNumber = pastedText.replace(/\D/g, '').slice(-10);
+      this.value = cleanedNumber;
+      validatePhone(false);
+      updateFormatPreview(cleanedNumber);
+      formatPreview.classList.add('show');
+    });
+
+    // Auto-format as user types (add space after 5 digits visually)
+    phoneInput.addEventListener('keyup', function(e) {
+      if (this.value.length === 10) {
+        validatePhone(true);
+      }
+    });
+
+    // Prevent non-numeric input
+    phoneInput.addEventListener('keypress', function(e) {
+      if (e.key && !/\d/.test(e.key) && e.key !== 'Enter') {
+        e.preventDefault();
+      }
+    });
+
+    // Create ripple effect on button click
+    submitBtn.addEventListener('click', function(e) {
+      const ripple = document.createElement('span');
+      const rect = this.getBoundingClientRect();
+      const size = Math.max(rect.width, rect.height);
+      const x = e.clientX - rect.left - size / 2;
+      const y = e.clientY - rect.top - size / 2;
+      
+      ripple.style.cssText = `
+        position: absolute;
+        width: ${size}px;
+        height: ${size}px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.5);
+        left: ${x}px;
+        top: ${y}px;
+        pointer-events: none;
+        animation: rippleEffect 0.6s ease-out;
+      `;
+      
+      this.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 600);
+    });
+
+    // Add ripple animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes rippleEffect {
+        to {
+          transform: scale(4);
+          opacity: 0;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  </script>
+{% endblock %}

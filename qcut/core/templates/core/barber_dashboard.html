@@ -1,0 +1,810 @@
+{% extends "core/base.html" %}
+{% block title %}Barber Dashboard{% endblock %}
+{% block content %}
+<style>
+  :root {
+    --primary: #f97316;
+    --primary-dark: #ea580c;
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --info: #3b82f6;
+    --dark: #0f172a;
+    --light: #f8fafc;
+    --border: #e2e8f0;
+    --shadow: rgba(0, 0, 0, 0.1);
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    min-height: 100vh;
+    padding: 1rem;
+  }
+
+  nav {
+    background: white;
+    padding: 1.5rem 2rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px var(--shadow);
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    animation: slideDown 0.5s ease;
+    border: 2px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+
+  nav::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+  }
+
+  nav h2 {
+    color: var(--dark);
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  nav .muted {
+    color: #64748b;
+    margin: 0;
+  }
+
+  nav .muted strong {
+    color: var(--primary);
+    font-weight: 600;
+  }
+
+  .nav-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-left: auto;
+  }
+
+  .queue-header {
+    background: white;
+    padding: 1.5rem 2rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px var(--shadow);
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    animation: fadeIn 0.5s ease 0.1s backwards;
+    border: 2px solid var(--border);
+  }
+
+  .queue-header h2 {
+    color: var(--dark);
+    font-size: 1.5rem;
+    margin: 0;
+  }
+
+  .refresh-btn {
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .refresh-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--primary-dark), #dc2626);
+    transition: left 0.3s ease;
+  }
+
+  .refresh-btn span {
+    position: relative;
+    z-index: 1;
+  }
+
+  .refresh-btn svg {
+    position: relative;
+    z-index: 1;
+    transition: transform 0.6s ease;
+  }
+
+  .refresh-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(249, 115, 22, 0.4);
+  }
+
+  .refresh-btn:hover::before {
+    left: 0;
+  }
+
+  .refresh-btn:hover svg {
+    transform: rotate(360deg);
+  }
+
+  .refresh-btn:active {
+    transform: translateY(0);
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .card {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px var(--shadow);
+    border: 2px solid var(--border);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    animation: fadeIn 0.5s ease backwards;
+  }
+
+  .card:nth-child(1) { animation-delay: 0.2s; }
+  .card:nth-child(2) { animation-delay: 0.3s; }
+  .card:nth-child(3) { animation-delay: 0.4s; }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px var(--shadow);
+    border-color: var(--primary);
+  }
+
+  .card:hover::before {
+    transform: scaleX(1);
+  }
+
+  .card h3 {
+    color: #64748b;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 1rem;
+  }
+
+  .card p {
+    color: var(--dark);
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0;
+    transition: all 0.3s ease;
+  }
+
+  .card p.pulse {
+    animation: pulse 0.5s ease;
+  }
+
+  .serve-card {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .serve-card p {
+    margin-bottom: 1rem;
+  }
+
+  .btn {
+    padding: 0.875rem 1.5rem;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--primary-dark), #dc2626);
+    transition: left 0.3s ease;
+  }
+
+  .btn span, .btn svg {
+    position: relative;
+    z-index: 1;
+  }
+
+  .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(249, 115, 22, 0.4);
+  }
+
+  .btn:hover::before {
+    left: 0;
+  }
+
+  .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+
+  .btn-secondary {
+    background: white;
+    color: var(--primary);
+    border: 2px solid var(--primary);
+  }
+
+  .btn-secondary::before {
+    background: var(--primary);
+  }
+
+  .btn-secondary:hover {
+    color: white;
+  }
+
+  .btn-logout {
+    background: linear-gradient(135deg, #64748b, #475569);
+  }
+
+  .btn-logout::before {
+    background: linear-gradient(135deg, #475569, #334155);
+  }
+
+  .box {
+    background: white;
+    padding: 3rem 2rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px var(--shadow);
+    border: 2px dashed var(--border);
+    text-align: center;
+    animation: fadeIn 0.5s ease 0.5s backwards;
+    transition: all 0.3s ease;
+  }
+
+  .box:hover {
+    border-color: var(--primary);
+    transform: translateY(-3px);
+  }
+
+  .box h3 {
+    color: #64748b;
+    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .box p {
+    color: #94a3b8;
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  .box.hidden {
+    display: none;
+  }
+
+  /* Queue List */
+  .queue-list {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px var(--shadow);
+    border: 2px solid var(--border);
+    margin-bottom: 2rem;
+    animation: fadeIn 0.5s ease 0.5s backwards;
+  }
+
+  .queue-list.hidden {
+    display: none;
+  }
+
+  .queue-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    background: var(--light);
+    border-radius: 12px;
+    border: 2px solid var(--border);
+    transition: all 0.3s ease;
+    animation: slideIn 0.3s ease forwards;
+  }
+
+  .queue-item:last-child {
+    margin-bottom: 0;
+  }
+
+  .queue-item:hover {
+    border-color: var(--primary);
+    transform: translateX(5px);
+    box-shadow: 0 4px 15px var(--shadow);
+  }
+
+  .queue-item-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .queue-number {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.25rem;
+    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+  }
+
+  .queue-details h4 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1.1rem;
+    color: var(--dark);
+    font-weight: 600;
+  }
+
+  .queue-details p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: #64748b;
+  }
+
+  .queue-status {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .queue-status.waiting {
+    background: rgba(251, 191, 36, 0.1);
+    color: #f59e0b;
+  }
+
+  .queue-status.serving {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+    animation: pulse 2s ease infinite;
+  }
+
+  /* Toast Notification */
+  .toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, var(--success), #059669);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    animation: slideDown 0.3s ease;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .toast.error {
+    background: linear-gradient(135deg, var(--danger), #dc2626);
+  }
+
+  .toast.info {
+    background: linear-gradient(135deg, var(--info), #2563eb);
+  }
+
+  /* Animations */
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.8;
+      transform: scale(1.05);
+    }
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    nav {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .nav-actions {
+      width: 100%;
+      flex-direction: column;
+    }
+
+    .nav-actions .btn {
+      width: 100%;
+    }
+
+    .queue-header {
+      flex-direction: column;
+      gap: 1rem;
+      align-items: stretch;
+    }
+
+    .stats-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .queue-item {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+  }
+</style>
+
+<nav>
+  <div>
+    <h2>✂️ Qcut Dashboard</h2>
+    <p class="muted">Welcome, <strong>{{ user.full_name }}</strong></p>
+  </div>
+  <div class="nav-actions">
+    <a class="btn btn-secondary" href="{% url 'core:barber_set_password' %}">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+      </svg>
+      <span>Change Password</span>
+    </a>
+    <a class="btn btn-logout" href="{% url 'core:logout' %}">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+      </svg>
+      <span>Logout</span>
+    </a>
+  </div>
+</nav>
+
+<div class="queue-header">
+  <h2>📋 Queue</h2>
+  <button class="refresh-btn" onclick="refreshQueue()">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+    </svg>
+    <span>Refresh</span>
+  </button>
+</div>
+
+<div class="stats-grid">
+  <div class="card">
+    <h3>📋 Total Waiting</h3>
+    <p id="totalWaiting">0</p>
+  </div>
+
+  <div class="card serve-card">
+        <div>
+            <h3>⏱️ Est. Wait Time</h3>
+            <p id="waitTime">0m</p>
+        </div>
+                <button class="btn" id="serveBtn" onclick="manageService()" disabled>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span id="serveBtnText">Mark Served</span>
+        </button>
+    </div>
+
+  <div class="card">
+    <h3>📊 Status</h3>
+    <p id="queueStatus">Empty</p>
+  </div>
+</div>
+
+<div class="queue-list hidden" id="queueList">
+  <!-- Queue items will be inserted here -->
+</div>
+
+<div class="box" id="emptyBox">
+  <h3>✨ No customers in queue</h3>
+  <p>Customers can find you in the app and join the queue</p>
+</div>
+
+<script>
+    const AVG_SERVICE_TIME = 25; // minutes
+
+    // --- UTILITIES ---
+
+    function showToast(message, type = "success") {
+        const toast = document.createElement("div");
+        toast.className = `toast ${type}`;
+        
+        const icon = type === "success" ? "✓" : type === "error" ? "✕" : "ℹ";
+        toast.innerHTML = `
+            <span style="font-size: 1.25rem;">${icon}</span>
+            <span>${message}</span>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.style.animation = "fadeIn 0.3s ease reverse";
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    // --- DATA FETCHING & RENDERING ---
+
+    async function fetchQueueData() {
+        try {
+            const response = await fetch("{% url 'core:get_barber_queue' %}");
+            const data = await response.json();
+            
+            if (data.success) {
+                return data.queue_data;
+            } else {
+                showToast(data.error || "Failed to fetch queue.", "error");
+                return []; 
+            }
+        } catch (error) {
+            console.error('Error fetching queue:', error);
+            showToast("Network error. Could not fetch queue.", "error");
+            return [];
+        }
+    }
+
+    async function updateDashboard() {
+        const queueData = await fetchQueueData();
+        
+        const totalInQueue = queueData.length;
+        const waitingCount = queueData.filter(item => item.status === "waiting").length;
+        const servingCount = queueData.filter(item => item.status === "serving").length;
+        
+        // --- Update Stats ---
+        document.getElementById("totalWaiting").textContent = totalInQueue;
+        
+        // Wait time is based on all people currently waiting (total - serving)
+        const waitTime = waitingCount * AVG_SERVICE_TIME;
+        document.getElementById("waitTime").textContent = waitTime > 0 ? `${waitTime}m` : "0m";
+        
+        // Update status
+        const statusEl = document.getElementById("queueStatus");
+        const serveBtn = document.getElementById("serveBtn");
+        const serveBtnText = document.getElementById("serveBtnText");
+        
+        if (servingCount > 0) {
+            statusEl.textContent = "Serving";
+            statusEl.style.color = "#3b82f6";
+            serveBtnText.textContent = "Mark Served"; // Change button text
+            serveBtn.disabled = false;
+        } else if (waitingCount > 0) {
+            statusEl.textContent = "Ready";
+            statusEl.style.color = "#10b981";
+            serveBtnText.textContent = "Start Serving"; // Change button text
+            serveBtn.disabled = false;
+        } else {
+            statusEl.textContent = "Empty";
+            statusEl.style.color = "#64748b";
+            serveBtnText.textContent = "Mark Served"; // Default text, though button is disabled
+            serveBtn.disabled = true;
+        }
+        
+        // Show/hide queue list and empty box
+        const queueListEl = document.getElementById("queueList");
+        const emptyBox = document.getElementById("emptyBox");
+        
+        if (queueData.length === 0) {
+            queueListEl.classList.add("hidden");
+            emptyBox.classList.remove("hidden");
+        } else {
+            queueListEl.classList.remove("hidden");
+            emptyBox.classList.add("hidden");
+            renderQueue(queueData, servingCount > 0);
+        }
+    }
+
+    // Render queue
+    function renderQueue(queueData, isServing) {
+        const queueListEl = document.getElementById("queueList");
+        queueListEl.innerHTML = "";
+        
+        queueData.forEach((item, index) => {
+            const queueItem = document.createElement("div");
+            queueItem.className = "queue-item";
+            queueItem.style.animationDelay = `${index * 0.1}s`;
+            
+            queueItem.innerHTML = `
+                <div class="queue-item-info">
+                    <div class="queue-number">${index + 1}</div>
+                    <div class="queue-details">
+                        <h4>${item.name}</h4>
+                        <p>Joined at ${item.joined_at} ${item.status === 'waiting' ? '• Est. wait: ' + item.waitTime + 'm' : ''}</p>
+                    </div>
+                </div>
+                <span class="queue-status ${item.status}">
+                    ${item.status === "serving" ? "🔵 Serving Now" : "⏳ Waiting"}
+                </span>
+            `;
+            
+            queueListEl.appendChild(queueItem);
+        });
+    }
+
+    // Refresh queue 
+    function refreshQueue() {
+        showToast("Queue refreshed!", "info");
+        
+        // Add pulse animation to stats
+        document.getElementById("totalWaiting").classList.add("pulse");
+        document.getElementById("waitTime").classList.add("pulse");
+        document.getElementById("queueStatus").classList.add("pulse");
+        
+        setTimeout(() => {
+            document.getElementById("totalWaiting").classList.remove("pulse");
+            document.getElementById("waitTime").classList.remove("pulse");
+            document.getElementById("queueStatus").classList.remove("pulse");
+        }, 500);
+        
+        updateDashboard(); 
+    }
+
+    // --- ACTIONS ---
+
+    // New main function to manage service flow
+    async function manageService() {
+        const serveBtnText = document.getElementById("serveBtnText").textContent;
+
+        if (serveBtnText === "Mark Served") {
+            markServed();
+        } else if (serveBtnText === "Start Serving") {
+            startServing();
+        }
+    }
+    
+    // Marks the currently serving customer as completed (inactive)
+    async function markServed() {
+        try {
+            const response = await fetch("{% url 'core:mark_served_api' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}' // CSRF token is necessary for POST
+                },
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                showToast(data.message, "success");
+            } else {
+                showToast(data.message || "Failed to mark served.", "error");
+            }
+
+        } catch (error) {
+            console.error('Error marking served:', error);
+            showToast("Network error during service update.", "error");
+        }
+
+        refreshQueue();
+    }
+    
+    // Marks the first waiting customer as serving
+    async function startServing() {
+        try {
+            const response = await fetch("{% url 'core:start_serving_api' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}' // CSRF token is necessary for POST
+                },
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                showToast(data.message, "info");
+            } else {
+                showToast(data.message || "Failed to start serving.", "error");
+            }
+
+        } catch (error) {
+            console.error('Error starting service:', error);
+            showToast("Network error during service update.", "error");
+        }
+
+        refreshQueue();
+    }
+    
+    // --- INITIALIZATION ---
+    document.addEventListener('DOMContentLoaded', () => {
+        updateDashboard();
+        // Auto-refresh the queue every 30 seconds
+        setInterval(updateDashboard, 30000); 
+    });
+</script>
+
+{% endblock %}

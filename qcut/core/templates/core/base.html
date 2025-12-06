@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>{% block title %}QCut{% endblock %}</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/modern-normalize/modern-normalize.css" />
+  <style>
+    /* Messages Container */
+    .messages-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-width: 420px;
+      width: 100%;
+      pointer-events: none;
+    }
+
+    /* Base Message Styles */
+    .message {
+      pointer-events: all;
+      background: white;
+      border-radius: 12px;
+      padding: 16px 20px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      display: flex;
+      align-items: start;
+      gap: 12px;
+      position: relative;
+      overflow: hidden;
+      animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transition: all 0.3s ease;
+      border-left: 4px solid #3b82f6;
+    }
+
+    .message:hover {
+      transform: translateX(-4px);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.16);
+    }
+
+    /* Progress Bar */
+    .message::before {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 3px;
+      background: currentColor;
+      width: 100%;
+      transform-origin: left;
+      animation: progress 5s linear forwards;
+    }
+
+    /* Icon Container */
+    .message-icon {
+      flex-shrink: 0;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      animation: iconPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.2s both;
+    }
+
+    .message-icon svg {
+      width: 16px;
+      height: 16px;
+      stroke-width: 2.5;
+    }
+
+    /* Content */
+    .message-content {
+      flex: 1;
+      color: #1e293b;
+      font-size: 14px;
+      line-height: 1.5;
+      font-weight: 500;
+    }
+
+    /* Close Button */
+    .message-close {
+      flex-shrink: 0;
+      width: 24px;
+      height: 24px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      color: #64748b;
+      opacity: 0;
+      animation: fadeIn 0.3s ease 0.4s forwards;
+    }
+
+    .message-close:hover {
+      background: #f1f5f9;
+      color: #1e293b;
+      transform: rotate(90deg);
+    }
+
+    .message-close svg {
+      width: 16px;
+      height: 16px;
+      stroke-width: 2.5;
+    }
+
+    /* Message Type Variants */
+    .message.success {
+      border-left-color: #10b981;
+      background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+    }
+
+    .message.success .message-icon {
+      background: #d1fae5;
+      color: #10b981;
+    }
+
+    .message.success::before {
+      background: #10b981;
+    }
+
+    .message.error,
+    .message.danger {
+      border-left-color: #ef4444;
+      background: linear-gradient(135deg, #ffffff 0%, #fef2f2 100%);
+    }
+
+    .message.error .message-icon,
+    .message.danger .message-icon {
+      background: #fee2e2;
+      color: #ef4444;
+    }
+
+    .message.error::before,
+    .message.danger::before {
+      background: #ef4444;
+    }
+
+    .message.warning {
+      border-left-color: #f59e0b;
+      background: linear-gradient(135deg, #ffffff 0%, #fffbeb 100%);
+    }
+
+    .message.warning .message-icon {
+      background: #fef3c7;
+      color: #f59e0b;
+    }
+
+    .message.warning::before {
+      background: #f59e0b;
+    }
+
+    .message.info {
+      border-left-color: #3b82f6;
+      background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%);
+    }
+
+    .message.info .message-icon {
+      background: #dbeafe;
+      color: #3b82f6;
+    }
+
+    .message.info::before {
+      background: #3b82f6;
+    }
+
+    /* Animations */
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(100%);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes slideOut {
+      to {
+        opacity: 0;
+        transform: translateX(120%);
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes iconPop {
+      0% {
+        transform: scale(0) rotate(-180deg);
+        opacity: 0;
+      }
+      50% {
+        transform: scale(1.2) rotate(10deg);
+      }
+      100% {
+        transform: scale(1) rotate(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes progress {
+      from {
+        transform: scaleX(1);
+      }
+      to {
+        transform: scaleX(0);
+      }
+    }
+
+    .message.removing {
+      animation: slideOut 0.3s ease forwards;
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      .messages-container {
+        left: 20px;
+        right: 20px;
+        max-width: none;
+      }
+
+      .message {
+        padding: 14px 16px;
+      }
+
+      .message-content {
+        font-size: 13px;
+      }
+    }
+
+    /* Accessibility */
+    @media (prefers-reduced-motion: reduce) {
+      .message,
+      .message-icon,
+      .message-close {
+        animation: none !important;
+        transition: none !important;
+      }
+
+      .message::before {
+        animation: none !important;
+      }
+    }
+
+    /* Counter Badge */
+    .message-counter {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+      animation: counterPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes counterPop {
+      0% {
+        transform: scale(0);
+      }
+      50% {
+        transform: scale(1.2);
+      }
+      100% {
+        transform: scale(1);
+      }
+    }
+  </style>
+</head>
+<body>
+  {% if messages %}
+  <div class="messages-container" id="messagesContainer">
+    {% for m in messages %}
+    <div class="message {% if m.tags %}{{ m.tags }}{% endif %}" data-message-id="{{ forloop.counter }}">
+      <div class="message-icon">
+        {% if 'success' in m.tags %}
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+        </svg>
+        {% elif 'error' in m.tags or 'danger' in m.tags %}
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+        {% elif 'warning' in m.tags %}
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+        {% else %}
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <circle cx="12" cy="12" r="10"/>
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 16v-4m0-4h.01"/>
+        </svg>
+        {% endif %}
+      </div>
+      <div class="message-content">{{ m }}</div>
+      <button class="message-close" type="button" aria-label="Close message">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+      {% if forloop.counter > 1 %}
+      <span class="message-counter">{{ forloop.counter }}</span>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+  <script>
+    (function() {
+      const messagesContainer = document.getElementById('messagesContainer');
+      if (!messagesContainer) return;
+
+      const messages = messagesContainer.querySelectorAll('.message');
+      
+      // Auto-dismiss messages after 5 seconds
+      messages.forEach((message, index) => {
+        const autoDismissTimer = setTimeout(() => {
+          dismissMessage(message);
+        }, 5000 + (index * 200)); // Stagger dismissals slightly
+
+        // Store timer on element so we can clear it on manual close
+        message.dataset.timer = autoDismissTimer;
+
+        // Close button functionality
+        const closeBtn = message.querySelector('.message-close');
+        if (closeBtn) {
+          closeBtn.addEventListener('click', () => {
+            clearTimeout(autoDismissTimer);
+            dismissMessage(message);
+          });
+        }
+
+        // Pause auto-dismiss on hover
+        message.addEventListener('mouseenter', () => {
+          clearTimeout(autoDismissTimer);
+          message.style.animationPlayState = 'paused';
+        });
+
+        message.addEventListener('mouseleave', () => {
+          const newTimer = setTimeout(() => {
+            dismissMessage(message);
+          }, 3000);
+          message.dataset.timer = newTimer;
+          message.style.animationPlayState = 'running';
+        });
+      });
+
+      function dismissMessage(message) {
+        message.classList.add('removing');
+        
+        // Remove from DOM after animation
+        setTimeout(() => {
+          message.remove();
+          
+          // If no more messages, remove container
+          if (messagesContainer.children.length === 0) {
+            messagesContainer.remove();
+          }
+        }, 300);
+
+        // Update counters on remaining messages
+        updateCounters();
+      }
+
+      function updateCounters() {
+        const remainingMessages = messagesContainer.querySelectorAll('.message:not(.removing)');
+        remainingMessages.forEach((msg, index) => {
+          const counter = msg.querySelector('.message-counter');
+          if (index > 0) {
+            if (counter) {
+              counter.textContent = index + 1;
+            } else {
+              const newCounter = document.createElement('span');
+              newCounter.className = 'message-counter';
+              newCounter.textContent = index + 1;
+              msg.appendChild(newCounter);
+            }
+          } else if (counter) {
+            counter.remove();
+          }
+        });
+      }
+
+      // Keyboard accessibility - ESC to close all messages
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && messagesContainer) {
+          messages.forEach(message => {
+            clearTimeout(message.dataset.timer);
+            dismissMessage(message);
+          });
+        }
+      });
+
+      // Sound effect on message appearance (optional - uncomment to enable)
+      /*
+      function playNotificationSound() {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.value = 800;
+        oscillator.type = 'sine';
+        
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.1);
+      }
+      
+      if (messages.length > 0) {
+        playNotificationSound();
+      }
+      */
+    })();
+  </script>
+  {% endif %}
+  
+  {% block content %}{% endblock %}
+</body>
+</html>
